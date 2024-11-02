@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils,
   identifylib,
-  alertwindowunit, boardwinunit, generalwinunit,
+  alertwindowunit, boardwinunit, generalwinunit, ScreenShotWinUnit,
   MUIClass.Window, MUIClass.Group, MUIClass.Area;
 
 type
@@ -19,6 +19,7 @@ type
     procedure AlertClick(Sender: TObject);
     procedure BoardClick(Sender: TObject);
     procedure GeneralClick(Sender: TObject);
+    procedure ScreenShotClick(Sender: TObject);
   public
     constructor Create; override;
   end;
@@ -44,6 +45,12 @@ begin
   GeneralWin.Execute;
 end;
 
+procedure TMainWindow.ScreenShotClick(Sender: TObject);
+begin
+  ScreenShotWin.Show;
+  ScreenShotWin.ToFront;
+end;
+
 constructor TMainWindow.Create;
 var
   Grp: TMUIGroup;
@@ -59,21 +66,27 @@ begin
   TMUIText.Create('Huh? identify.library Version ' + IntToStr(identifylib.IdentifyBase^.lib_Version) + '.' + IntToStr(identifylib.IdentifyBase^.lib_Revision)).Parent := Grp;
 
 
+  with TMUIButton.Create('Overview') do
+  begin
+    OnClick  := @ScreenShotClick;
+    Parent := Grp;
+  end;
+
   with TMUIButton.Create('General') do
   begin
     OnClick  := @GeneralClick;
     Parent := Grp;
   end;
 
-  with TMUIButton.Create('Alert') do
-  begin
-    OnClick := @AlertClick;
-    Parent := Grp;
-  end;
-
   with TMUIButton.Create('Boards') do
   begin
     OnClick := @BoardClick;
+    Parent := Grp;
+  end;
+
+  with TMUIButton.Create('Alert') do
+  begin
+    OnClick := @AlertClick;
     Parent := Grp;
   end;
 

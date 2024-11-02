@@ -5,10 +5,45 @@ unit boardwinunit;
 interface
 
 uses
-  Classes, SysUtils, mui, configvars, Utility, Math,
+  Exec, Classes, SysUtils, mui,
+  {$ifdef Amiga68K}configvars,{$endif} Utility, Math,
   identifylib, muihelper,
   MUIClass.Window,
   MUIClass.Area, MUIClass.Group, MUIClass.StringGrid;
+
+{$ifdef AROS}
+type
+  TExpansionRom = record
+    er_Type         : Byte;
+    er_Product      : Byte;
+    er_Flags        : Byte;
+    er_Reserved03   : Byte;
+    er_Manufacturer : Word;
+    er_SerialNumber : LongWord;
+    er_InitDiagVec  : Word;
+    er_Reserved0c   : Byte;
+    er_Reserved0d   : Byte;
+    er_Reserved0e   : Byte;
+    er_Reserved0f   : Byte;
+  end;
+
+  PConfigDev = ^tConfigDev;
+  tConfigDev = record
+        cd_Node         : TNode;
+        cd_Flags        : Byte;
+        cd_Pad          : Byte;
+        cd_Rom          : TExpansionRom; { image of expansion rom area }
+        cd_BoardAddr    : Pointer;       { where in memory the board is }
+        cd_BoardSize    : ULONG;         { size in bytes }
+        cd_SlotAddr     : Word;          { which slot number }
+        cd_SlotSize     : Word;          { number of slots the board takes }
+        cd_Driver       : Pointer;       { pointer to node of driver }
+        cd_NextCD       : PConfigDev;    { linked list of drivers to config }
+        cd_Unused       : Array [0..3] of ULONG;
+                                         { for whatever the driver whats }
+  end;
+{$endif}
+
 
 type
   TBoard = class
@@ -27,16 +62,22 @@ type
     ConfigText, ManuText, ProdText, ClassText,
     BAddText, SlotText, SerialText, DriverText: TMUIText;
     procedure ClearList;
+    function GetBoard(i: Integer): TBoard;
+    function GetBoardCount: LongInt;
     procedure RedoList;
     procedure SelectChange(Sender: TObject);
   public
     constructor Create; override;
     destructor Destroy; override;
 
+    property BoardCount: LongInt read GetBoardCount;
+    property Board[i: Integer]: TBoard read GetBoard;
   end;
 
 var
   BoardsWin: TBoardsWin;
+
+function FormatBytes(ABytes: LongWord): string;
 
 implementation
 
@@ -82,18 +123,33 @@ begin
   SelectChange(nil);
 end;
 
+function TBoardsWin.GetBoard(i: Integer): TBoard;
+begin
+  Result := nil;
+  if InRange(i, 0, FList.Count - 1) then
+    Result := TBoard(FList[i]);
+end;
+
+function TBoardsWin.GetBoardCount: LongInt;
+begin
+  Result := FList.Count;
+end;
+
 procedure TBoardsWin.RedoList;
 var
+  {$ifndef AROS}
   Expans: PConfigDev;
+  {$endif}
   Manuf, Prod, EClass: PChar;
   NB: TBoard;
   i: Integer;
 begin
   ClearList;
-  Expans := nil;
   Manuf := AllocMem(128);
   Prod := AllocMem(128);
   EClass := AllocMem(128);
+  {$ifndef AROS}
+  Expans := nil;
   while (IdExpansionTags([
     IDTAG_ManufStr, AsTag(Manuf),
     IDTAG_ProdStr, AsTag(Prod),
@@ -108,9 +164,9 @@ begin
     NB.Prod := Prod;
     NB.ExpClass := EClass;
     FList.Add(NB);
-    //writeln(NB.Manu, ';', NB.Prod,';',NB.ExpClass);
+    writeln(NB.Manu, ';', NB.Prod,';',NB.ExpClass);
   end;
-
+  {$endif}
   BoardList.Quiet := True;
   BoardList.NumRows := FList.Count;
   BoardList.NumColumns := 2;

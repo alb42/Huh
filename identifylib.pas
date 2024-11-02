@@ -28,7 +28,7 @@ uses
 
 const
   IdentifyLibName = 'identify.library'; // name of the library
-  IdentifyLibMinVersion = 44; // used to create this import lib
+  IdentifyLibMinVersion = 37; // used to create this import lib
 
 var
   IdentifyBase: PLibrary;
@@ -368,6 +368,7 @@ const
   IDERR_DONE      = -6; // Done with traversing (not an error)
   //                -7 is obsolete
 
+{$ifdef Amiga68k}
 function IdExpansion(Tags: PTagItem location 'a0'): LongInt syscall IdentifyBase 30;
 function IdHardware(_Type: LongWord location 'd0'; Tags: PTagItem location 'a0'): STRPTR syscall IdentifyBase 36;
 function IdAlert(ID: LongWord  location 'd0'; Tags: PTagItem location 'a0'): LongInt; syscall IdentifyBase 42;
@@ -376,6 +377,18 @@ function IdHardwareNum(_Type: LongWord location 'd0'; Tags: PTagItem location 'a
 procedure IdHardwareUpdate() syscall IdentifyBase 60;
 function IdFormatString(_String: STRPTR location 'a0'; Buffer: STRPTR location 'a1'; Length: LongWord location 'd0'; Tags: PTagItem location 'a2'): LongWord syscall IdentifyBase 66;
 function IdEstimateFormatSize(_String: STRPTR location 'a0'; Tags: PTagItem location 'a1'): LongWord syscall IdentifyBase 72;
+{$endif}
+
+{$ifdef AROS}
+function IdExpansion(Tags: PTagItem): LongInt syscall IdentifyBase 5;
+function IdHardware(_Type: LongWord; Tags: PTagItem): STRPTR syscall IdentifyBase 6;
+function IdAlert(ID: LongWord; Tags: PTagItem): LongInt; syscall IdentifyBase 7;
+function IdFunction(LibName: STRPTR; Offset: LongInt; Tags: PTagItem): LongInt; syscall IdentifyBase 8;
+function IdHardwareNum(_Type: LongWord; Tags: PTagItem): LongWord syscall IdentifyBase 9;
+procedure IdHardwareUpdate() syscall IdentifyBase 10;
+function IdFormatString(_String: STRPTR; Buffer: STRPTR; Length: LongWord; Tags: PTagItem): LongWord syscall IdentifyBase 11;
+function IdEstimateFormatSize(_String: STRPTR; Tags: PTagItem): LongWord syscall IdentifyBase 12;
+{$endif}
 
 
 // tagslist versions
